@@ -1,4 +1,4 @@
-FROM python:3.9-alpine
+FROM python:3.9-slim
 WORKDIR /app
 # Update Alpine packages to patch the OpenSSL vulnerability
 RUN apk update && apk upgrade --no-cache
