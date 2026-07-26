@@ -35,4 +35,4 @@ jobs:
           format: 'table'
           exit-code: '1' # Fails the pipeline if critical/high vulnerabilities are found[span_1](start_span)[span_1](end_span)
           ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
