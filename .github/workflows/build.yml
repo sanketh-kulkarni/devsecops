@@ -39,3 +39,21 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
           severity: 'CRITICAL'
+
+  k8s-deploy:
+    name: Deploy to Kubernetes
+    needs: docker-and-trivy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Minikube Cluster
+        uses: medyagh/setup-minikube@master
+
+      - name: Deploy to Kubernetes Cluster
+        run: |
+          # Replace placeholder with actual commit SHA tag and apply configuration
+          sed -i 's|my-python-app:latest|my-python-app:${{ github.sha }}|g' deployment.yaml || true
+          kubectl apply -f deployment.yaml
+          kubectl get pods
+          kubectl get services
