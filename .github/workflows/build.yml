@@ -17,3 +17,22 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  docker-and-trivy:
+    name: Docker Build & Trivy Scan
+    needs: sonarqube # Ensures this only runs if SonarQube passes successfully
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: docker build -t my-python-app:${{ github.sha }} .
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'my-python-app:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1' # Fails the pipeline if critical/high vulnerabilities are found[span_1](start_span)[span_1](end_span)
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
