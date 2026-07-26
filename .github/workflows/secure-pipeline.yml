@@ -1,0 +1,54 @@
+name: Secure DevSecOps Pipeline
+
+# Step 1 & 2: Developer pushes code to Git, triggering the pipeline
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-sast:
+    name: Build & Static Code Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Assuming a Java/Maven project based on typical SonarQube setups
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Step 3 & 4: Perform static code analysis using SonarQube and Build application
+      - name: Build and SonarQube Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: mvn clean verify sonar:sonar -Dsonar.projectKey=my-project
+
+  docker-and-trivy:
+    name: Docker Build & Trivy Scan
+    needs: build-and-sast # Ensures this only runs if the SAST scan passes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 5: Create Docker image
+      - name: Build Docker Image
+        run: docker build -t my-app:${{ github.sha }} .
+
+      # Step 6: Scan Docker image using Trivy
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'my-app:${{ github.sha }}'
+          format: 'table'
+          # If critical vulnerabilities are found: Stop and notify team
+          exit-code: '1' 
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
