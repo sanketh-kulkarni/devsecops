@@ -1,9 +1,17 @@
-FROM python:3.9-alpine
+FROM python:3.11-slim
+
 WORKDIR /app
-# Update Alpine packages to patch the OpenSSL vulnerability
-RUN apk update && apk upgrade --no-cache
+
+# Create and switch to a non-root user
+RUN useradd -m -u 1000 appuser
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY app.py .
+
+COPY . .
+
+USER appuser
+
 EXPOSE 5000
+
 CMD ["python", "app.py"]
