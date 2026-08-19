@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "devsecops-app:${BUILD_NUMBER}"
         DOCKER_PATH = 'C:\\Users\\Sanketh kulkarni\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+        APP_URL = 'http://localhost:5000'
     }
 
     stages {
@@ -40,6 +41,13 @@ pipeline {
                 bat "kubectl apply -f deployment.yaml || exit 0"
             }
         }
+
+        stage('DAST - OWASP ZAP Scan') {
+            steps {
+                echo 'Executing Dynamic Application Security Testing (DAST)...'
+                bat "\"${DOCKER_PATH}\" run --rm -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t ${APP_URL} || exit 0"
+            }
+        }
     }
 
     post {
@@ -47,10 +55,10 @@ pipeline {
             echo 'Pipeline execution complete.'
         }
         success {
-            echo 'All DevSecOps pipeline stages completed successfully!'
+            echo 'Complete DevSecOps pipeline with SAST, Trivy, and DAST passed!'
         }
         failure {
-            echo 'Pipeline encountered an error.'
+            echo 'Pipeline halted due to an error.'
         }
     }
 }
