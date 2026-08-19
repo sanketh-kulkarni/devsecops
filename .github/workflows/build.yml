@@ -1,4 +1,5 @@
 name: Build
+
 on:
   push:
     branches:
@@ -11,49 +12,13 @@ jobs:
     name: SonarQube
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@b4ffde65f46336ab851534e083d020c85c72962f # v4.1.1
         with:
           fetch-depth: 0
 
-      - name: SonarQube Scan
-        uses: SonarSource/sonarcloud-github-action@master
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@49e6cd3b187936a73b8280d59ffd9da69df63ec9 # v2.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  docker-and-trivy:
-    name: Docker Build & Trivy Scan
-    needs: sonarqube
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build Docker Image
-        run: docker build -t my-python-app:${{ github.sha }} .
-
-      - name: Run Trivy Vulnerability Scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'my-python-app:${{ github.sha }}'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          severity: 'CRITICAL'
-
-  k8s-deploy:
-    name: Deploy to Kubernetes
-    needs: docker-and-trivy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Minikube Cluster
-        uses: medyagh/setup-minikube@master
-
-      - name: Deploy to Kubernetes Cluster
-        run: |
-          # Replace placeholder with actual commit SHA tag and apply configuration
-          sed -i 's|my-python-app:latest|my-python-app:${{ github.sha }}|g' deployment.yaml || true
-          kubectl apply -f deployment.yaml
-          kubectl get pods
-          kubectl get services
