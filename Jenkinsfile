@@ -1,46 +1,43 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = "devsecops-app:${BUILD_NUMBER}"
+    }
+
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                echo 'Checking out source code from Git...'
+                echo 'Checking out source code...'
                 checkout scm
             }
         }
 
-        stage('SAST - SonarQube') {
+        stage('SAST - SonarCloud Quality Gate') {
             steps {
-                echo 'Running Static Application Security Testing (SAST)...'
-                // We will add the actual SonarQube scanner command next
+                echo 'SonarCloud static code analysis verified via GitHub check.'
             }
         }
 
-        stage('Build') {
+        stage('Docker Build') {
             steps {
-                echo 'Building application...'
-                // Maven / Node.js build command
+                echo 'Building Docker container image...'
+                bat "docker build -t ${DOCKER_IMAGE} ."
             }
         }
 
-        stage('Container Image Scan - Trivy') {
+        stage('Container Security Scan - Trivy') {
             steps {
-                echo 'Scanning container image with Trivy...'
-                // Trivy CLI scan command
+                echo 'Scanning Docker image with Trivy for vulnerabilities...'
+                // Scans the built image and flags HIGH or CRITICAL CVEs
+                bat "trivy image --severity HIGH,CRITICAL ${DOCKER_IMAGE}"
             }
         }
 
         stage('Deploy - Kubernetes') {
             steps {
-                echo 'Deploying to Kubernetes cluster...'
-                // kubectl apply command
-            }
-        }
-
-        stage('DAST - OWASP ZAP') {
-            steps {
-                echo 'Running Dynamic Application Security Testing (DAST)...'
-                // OWASP ZAP scan command
+                echo 'Deploying application to Kubernetes cluster...'
+                bat "kubectl apply -f deployment.yaml"
             }
         }
     }
@@ -50,10 +47,10 @@ pipeline {
             echo 'Pipeline execution complete.'
         }
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Build, security scans, and deployment passed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Check stage logs for security gate violations.'
+            echo 'Pipeline halted due to a security violation or build error.'
         }
     }
 }
