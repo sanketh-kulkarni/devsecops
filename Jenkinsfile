@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "devsecops-app:${BUILD_NUMBER}"
-        DOCKER_PATH = 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe'
+        DOCKER_PATH = 'C:\\Users\\Sanketh kulkarni\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
     }
 
     stages {
@@ -47,10 +47,10 @@ pipeline {
             echo 'Pipeline execution complete.'
         }
         success {
-            echo 'Build, security scans, and deployment passed successfully!'
+            echo 'All DevSecOps pipeline stages completed successfully!'
         }
         failure {
-            echo 'Pipeline halted due to an error.'
+            echo 'Pipeline encountered an error.'
         }
     }
 }
